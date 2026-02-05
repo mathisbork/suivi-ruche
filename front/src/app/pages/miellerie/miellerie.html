@@ -1,0 +1,159 @@
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-warning fw-bold">🍯 Gestion de la Miellerie</h2>
+    <button class="btn btn-warning fw-bold" (click)="openModal()">+ Nouvelle Récolte</button>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="card bg-dark text-white border-warning shadow">
+        <div class="card-body">
+          <h5 class="card-title text-white-50">Stock Total</h5>
+          <h2 class="text-warning">145 <small>kg</small></h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card bg-dark text-white border-info shadow">
+        <div class="card-body">
+          <h5 class="card-title text-white-50">Pots réservés</h5>
+          <h2 class="text-info">24 <small>unités</small></h2>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card bg-dark text-white border-secondary shadow">
+    <div class="card-body p-0">
+      <table class="table table-dark table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Année</th>
+            <th>Poids</th>
+            <th>Format</th>
+            <th>Valeur Est.</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let s of stocks">
+            <td>{{ s.type_miel }}</td>
+            <td>{{ s.annee }}</td>
+            <td>{{ s.poids_total }} kg</td>
+            <td>{{ s.type_miel === 'Printemps' ? 'Crémeux' : 'Liquide' }}</td>
+            <td class="text-success fw-bold">{{ (s.poids_total * s.prix_kg).toFixed(2) }} €</td>
+            <td>
+              <button class="btn btn-sm btn-outline-danger" (click)="supprimerStock(s.id)">
+                Supprimer
+              </button>
+            </td>
+          </tr>
+
+          @if (stocks.length === 0) {
+            <tr>
+              <td colspan="6" class="text-center py-4 text-white-50 italic">
+                Aucune récolte enregistrée pour le moment.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+@if (isModalOpen) {
+  <div class="modal d-block shadow-lg" tabindex="-1" style="background-color: rgba(0, 0, 0, 0.7)">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-dark text-white border-warning">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title text-warning">🍯 Enregistrer une récolte</h5>
+          <button type="button" class="btn-close btn-close-white" (click)="closeModal()"></button>
+        </div>
+
+        <form (ngSubmit)="ajouterRecolte()">
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-8">
+                <label class="form-label text-warning small">Type de miel</label>
+                <select
+                  class="form-select bg-dark text-white border-secondary"
+                  [(ngModel)]="nouveauStock.type_miel"
+                  name="type"
+                >
+                  <option>Printemps</option>
+                  <option>Été</option>
+                  <option>Forêt</option>
+                  <option>Acacia</option>
+                  <option>Châtaignier</option>
+                </select>
+              </div>
+              <div class="col-4">
+                <label class="form-label text-warning small">Année</label>
+                <input
+                  type="number"
+                  class="form-control bg-dark text-white border-secondary"
+                  [(ngModel)]="nouveauStock.annee"
+                  name="annee"
+                />
+              </div>
+
+              <div class="col-6">
+                <label class="form-label text-white small">Pots de 500g</label>
+                <input
+                  type="number"
+                  class="form-control bg-dark text-white border-secondary"
+                  [(ngModel)]="nouveauStock.pots_500g"
+                  (ngModelChange)="calculerPoidsAuto()"
+                  name="p500"
+                  placeholder="0"
+                />
+              </div>
+              <div class="col-6">
+                <label class="form-label text-white small">Pots de 250g</label>
+                <input
+                  type="number"
+                  class="form-control bg-dark text-white border-secondary"
+                  [(ngModel)]="nouveauStock.pots_250g"
+                  (ngModelChange)="calculerPoidsAuto()"
+                  name="p250"
+                  placeholder="0"
+                />
+              </div>
+
+              <div class="col-6">
+                <label class="form-label text-white-50 small">Poids Total (kg)</label>
+                <input
+                  type="number"
+                  class="form-control bg-secondary text-white border-0"
+                  [ngModel]="nouveauStock.poids_total"
+                  name="poids"
+                  readonly
+                />
+              </div>
+
+              <div class="col-6">
+                <label class="form-label text-warning small">Prix au kg (€)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  class="form-control bg-dark text-white border-secondary"
+                  [(ngModel)]="nouveauStock.prix_kg"
+                  name="prix"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer border-secondary">
+            <button type="button" class="btn btn-outline-secondary" (click)="closeModal()">
+              Annuler
+            </button>
+            <button type="submit" class="btn btn-warning fw-bold">Enregistrer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}

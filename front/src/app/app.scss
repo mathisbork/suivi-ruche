@@ -1,0 +1,32 @@
+.navbar {
+  padding: 0.8rem 1rem;
+}
+
+.nav-link {
+  transition: color 0.3s ease;
+  &:hover {
+    color: #ffc107 !important; // Jaune abeille au survol
+  }
+}
+
+.active-link {
+  color: #ffc107 !important;
+  font-weight: bold;
+  border-bottom: 2px solid #ffc107;
+}
+
+// Pour mobile : on ajuste l'apparence du menu quand il est ouvert
+@media (max-width: 991px) {
+  .navbar-collapse {
+    background-color: #212529;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-top: 10px;
+  }
+  
+  .active-link {
+    border-bottom: none;
+    border-left: 3px solid #ffc107;
+    padding-left: 10px;
+  }
+}

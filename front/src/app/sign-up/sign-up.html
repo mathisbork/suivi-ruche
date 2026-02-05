@@ -1,0 +1,50 @@
+<div class="page-container d-flex align-items-center justify-content-center p-3">
+  <div class="login-card shadow col-11 col-md-8 col-lg-5 col-xl-4">
+    <h1 class="text-warning text-center mb-4">Créer un compte</h1>
+
+    <form class="w-100" (ngSubmit)="onSubmit()">
+      <div class="mb-3 text-start">
+        <label class="form-label text-white-50">Nom d'utilisateur</label>
+        <input
+          type="text"
+          name="username"
+          [(ngModel)]="userForm.username"
+          class="form-control text-champs"
+          required
+          placeholder="Ex: Apiculteur44"
+        />
+      </div>
+
+      <div class="mb-3 text-start">
+        <label class="form-label text-white-50">Email</label>
+        <input
+          type="text"
+          name="username"
+          [(ngModel)]="userForm.email"
+          class="form-control text-champs"
+          required
+          placeholder="votre@email.com"
+        />
+      </div>
+
+      <div class="mb-4 text-start">
+        <label class="form-label text-white-50">Mot de passe</label>
+        <input
+          type="password"
+          name="password"
+          [(ngModel)]="userForm.password"
+          class="form-control text-champs"
+          required
+          placeholder="••••••••"
+        />
+      </div>
+
+      <button type="submit" class="btn btn-warning w-100 fw-bold py-3 shadow-sm">S'inscrire</button>
+    </form>
+
+    <p class="text-white-50 text-center mt-4 mb-0">
+      Déjà inscrit ?
+      <a routerLink="/login" class="text-warning fw-bold text-decoration-none"> Se connecter </a>
+    </p>
+  </div>
+</div>
