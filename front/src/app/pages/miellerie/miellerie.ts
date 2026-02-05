@@ -1,109 +1,110 @@
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api';
-import { interval, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-miellerie',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './miellerie.html',
-  styleUrl: './miellerie.scss',
+  styleUrls: ['./miellerie.scss']
 })
 export class Miellerie implements OnInit, OnDestroy {
   stocks: any[] = [];
   isModalOpen = false;
-  private refreshTimer: any; // Pour stocker le timer
+  refreshInterval: any;
 
+  // L'objet qui sera envoyé au serveur
   nouveauStock = {
     type_miel: 'Printemps',
-    annee: new Date().getFullYear(),
+    annee: 2026,
     poids_total: 0,
-    pots_500g: 0,
-    pots_250g: 0,
-    prix_kg: 0,
+    pots_500g: 0, // Correspond à ton serveur
+    pots_250g: 0, // Correspond à ton serveur
+    prix_kg: 0    // Correspond à ton serveur
   };
 
-  // On injecte ChangeDetectorRef comme dans ton autre projet
-  constructor(
-    private apiService: ApiService,
-    private cd: ChangeDetectorRef,
-  ) {}
+  constructor(private api: ApiService, private cd: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.chargerStocks();
-
-    // Mise à jour automatique toutes les 5 secondes
-    this.refreshTimer = setInterval(() => {
+    // Actualisation automatique toutes les 2 secondes
+    this.refreshInterval = setInterval(() => {
       this.chargerStocks();
-    }, 5000);
+    }, 2000);
   }
 
   ngOnDestroy() {
-    // On détruit le timer quand on quitte la page pour éviter de ralentir le PC/tel
-    if (this.refreshTimer) {
-      clearInterval(this.refreshTimer);
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
     }
   }
 
+  chargerStocks() {
+    // On récupère l'utilisateur connecté ou on met 1 par défaut pour tester
+    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const userId = user.id || 1; 
+
+    this.api.getStocks(userId).subscribe({
+      next: (data: any) => {
+        this.stocks = data;
+        this.cd.detectChanges(); // Force la mise à jour du tableau
+      },
+      error: (e) => console.error("Erreur chargement stocks", e)
+    });
+  }
+
+  // Ouvre la popup
   openModal() {
     this.isModalOpen = true;
   }
-
+  
+  // Ferme la popup
   closeModal() {
     this.isModalOpen = false;
   }
 
-  chargerStocks() {
-    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-    if (user.id) {
-      this.apiService.getStocks(user.id).subscribe({
-        next: (data: any) => {
-          this.stocks = data;
-          this.cd.detectChanges(); // Force Angular à rafraîchir l'écran
-        },
-        error: (err: any) => console.error('Erreur:', err),
-      });
-    }
-  }
-
-  // Fonction pour calculer le poids en fonction des pots
+  // Calcule le poids quand tu changes le nombre de pots
   calculerPoidsAuto() {
-    this.nouveauStock.poids_total =
-      this.nouveauStock.pots_500g * 0.5 + this.nouveauStock.pots_250g * 0.25;
+    const p500 = Number(this.nouveauStock.pots_500g) || 0;
+    const p250 = Number(this.nouveauStock.pots_250g) || 0;
+    
+    // 1 pot de 500g = 0.5kg
+    // 1 pot de 250g = 0.25kg
+    this.nouveauStock.poids_total = (p500 * 0.5) + (p250 * 0.25);
   }
 
   ajouterRecolte() {
     const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-    const data = { ...this.nouveauStock, user_id: user.id };
-
-    this.apiService.addStock(data).subscribe({
-      next: () => {
-        console.log('Récolte ajoutée avec succès !');
-        this.chargerStocks();
-        // On remet le formulaire à zéro pour la prochaine fois
+    // On prépare les données pour ton server.js
+    const dataToSend = { 
+      ...this.nouveauStock, 
+      user_id: user.id || 1 
+    };
+    
+    this.api.addStock(dataToSend).subscribe({
+      next: (res) => {
+        console.log("Succès:", res);
+        this.chargerStocks(); // Recharge le tableau immédiatement
+        this.closeModal();    // Ferme la fenêtre
+        
+        // Remise à zéro du formulaire
         this.nouveauStock = {
-          type_miel: 'Printemps',
-          annee: 2026,
-          poids_total: 0,
-          pots_500g: 0,
-          pots_250g: 0,
-          prix_kg: 0,
+          type_miel: 'Printemps', annee: 2026, poids_total: 0,
+          pots_500g: 0, pots_250g: 0, prix_kg: 0
         };
       },
-      error: (err) => console.error("Erreur d'ajout :", err),
+      error: (err) => {
+        console.error("Erreur:", err);
+        alert("Erreur lors de l'ajout. Vérifie que le serveur tourne !");
+      }
     });
   }
-
+  
   supprimerStock(id: number) {
-    if (confirm('Es-tu sûr de vouloir supprimer cette récolte ?')) {
-      (this.apiService as any).deleteStock(id).subscribe({
-        next: () => {
-          this.chargerStocks(); // On rafraîchit la liste après suppression
-        },
-        error: (err: any) => console.error('Erreur lors de la suppression :', err),
-      });
-    }
+      if(confirm("Veux-tu vraiment supprimer cette récolte ?")) {
+          this.api.deleteStock(id).subscribe(() => this.chargerStocks());
+      }
   }
 }

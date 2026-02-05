@@ -106,10 +106,11 @@
                   class="form-control bg-dark text-white border-secondary"
                   [(ngModel)]="nouveauStock.pots_500g"
                   (ngModelChange)="calculerPoidsAuto()"
-                  name="p500"
+                  name="pots500"
                   placeholder="0"
                 />
               </div>
+
               <div class="col-6">
                 <label class="form-label text-white small">Pots de 250g</label>
                 <input
@@ -117,7 +118,7 @@
                   class="form-control bg-dark text-white border-secondary"
                   [(ngModel)]="nouveauStock.pots_250g"
                   (ngModelChange)="calculerPoidsAuto()"
-                  name="p250"
+                  name="pots250"
                   placeholder="0"
                 />
               </div>
