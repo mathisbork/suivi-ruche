@@ -26,6 +26,15 @@ export class AppComponent {
       });
   }
 
+  get isLoggedIn(): boolean {
+    return !!localStorage.getItem('currentUser');
+  }
+
+  get isAdmin(): boolean {
+    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    return user.role === 'admin';
+  }
+
   logout() {
     localStorage.removeItem('currentUser');
     this.router.navigate(['/login']);

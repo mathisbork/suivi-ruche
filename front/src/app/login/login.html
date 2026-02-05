@@ -5,24 +5,44 @@
     <form class="w-100" (ngSubmit)="onLogin()">
       <div class="mb-4">
         <label class="form-label text-white-50">Email</label>
-        <input name="email" [(ngModel)]="userForm.email" type="email" class="form-control text-champs" required />
+        <input
+          name="email"
+          [(ngModel)]="userForm.email"
+          type="email"
+          class="form-control text-champs"
+          required
+        />
       </div>
 
-      <div class="mb-5">
+      <div class="mb-4">
         <label class="form-label text-white-50">Mot de passe</label>
-        <input name="password" [(ngModel)]="userForm.password" type="password" class="form-control text-champs" required />
+        <input
+          name="password"
+          [(ngModel)]="userForm.password"
+          type="password"
+          class="form-control text-champs"
+          required
+        />
+      </div>
+
+      <div
+        *ngIf="errorMessage"
+        class="alert alert-danger text-center p-2 mb-4 small border-danger bg-danger bg-opacity-10 text-danger"
+      >
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ errorMessage }}
       </div>
 
       <button type="submit" class="btn btn-warning w-100 fw-bold py-3">Se connecter</button>
     </form>
-    <p class="text-white-50 mt-3">
+
+    <p class="text-white-50 mt-3 text-center">
       Pas encore de compte ?
+      <br />
       <a
         routerLink="/inscription"
-        class="text-warning fw-bold"
-        style="cursor: pointer; text-decoration: none"
+        class="text-warning fw-bold text-decoration-none"
+        style="cursor: pointer"
       >
-        <br />
         S'inscrire
       </a>
     </p>

@@ -49,7 +49,6 @@ app.get("/api/stocks/:userId", (req, res) => {
 app.post("/api/stocks", (req, res) => {
   const { type_miel, annee, poids_total, prix_kg, user_id } = req.body;
 
-  // Important : on s'assure que les valeurs par défaut pour les pots sont là si vides
   const pots_500g = req.body.pots_500g || 0;
   const pots_250g = req.body.pots_250g || 0;
 
@@ -61,7 +60,7 @@ app.post("/api/stocks", (req, res) => {
     [type_miel, annee, poids_total, pots_500g, pots_250g, prix_kg, user_id],
     (err, result) => {
       if (err) {
-        console.error("Erreur SQL détaillée :", err); // Regarde ton terminal VS Code !
+        console.error("Erreur SQL détaillée :", err);
         return res.status(500).json(err);
       }
       res
@@ -71,36 +70,46 @@ app.post("/api/stocks", (req, res) => {
   );
 });
 
+app.put("/api/stocks/:id", (req, res) => {
+  const id = req.params.id;
+  const { pots_500g, pots_250g, poids_total } = req.body;
+
+  const sql =
+    "UPDATE stocks_miel SET pots_500g = ?, pots_250g = ?, poids_total = ? WHERE id = ?";
+
+  db.query(sql, [pots_500g, pots_250g, poids_total, id], (err, result) => {
+    if (err) return res.status(500).json(err);
+    res.json({ message: "Stock mis à jour avec succès !" });
+  });
+});
+
 app.listen(3000, () => {
   console.log("Serveur prêt sur http://localhost:3000");
 });
 
 app.post("/api/login", (req, res) => {
   const { email, password } = req.body;
-
   const sqlSelect = "SELECT * FROM users WHERE email = ?";
 
   db.query(sqlSelect, [email], async (err, results) => {
     if (err) return res.status(500).json(err);
     if (results.length === 0)
-      return res.status(401).json({ message: "Identifiants incorrects" });
+      return res.status(401).json({ message: "Inconnu au bataillon" });
 
     const user = results[0];
     const match = await bcrypt.compare(password, user.password_hash);
 
     if (match) {
-      const sqlUpdate = "UPDATE users SET last_login = NOW() WHERE id = ?";
-
-      db.query(sqlUpdate, [user.id], (updErr) => {
-        if (updErr) console.error("Erreur mise à jour last_login :", updErr);
-
-        res.json({
-          message: "Connexion réussie",
-          user: { id: user.id, username: user.username },
-        });
+      res.json({
+        message: "Connexion réussie",
+        user: {
+          id: user.id,
+          username: user.username,
+          role: user.role,
+        },
       });
     } else {
-      res.status(401).json({ message: "Identifiants incorrects" });
+      res.status(401).json({ message: "Mauvais mot de passe" });
     }
   });
 });

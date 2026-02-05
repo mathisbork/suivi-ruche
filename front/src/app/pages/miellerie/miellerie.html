@@ -1,82 +1,256 @@
-<div class="container mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="text-warning fw-bold">🍯 Gestion de la Miellerie</h2>
-    <button class="btn btn-warning fw-bold" (click)="openModal()">+ Nouvelle Récolte</button>
+<div class="container-fluid bg-dark text-white min-vh-100 p-3 p-md-4">
+  <div
+    class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 border-bottom border-secondary pb-3 gap-3"
+  >
+    <div>
+      <h2 class="text-warning fw-bold mb-0">🍯 La Miellerie</h2>
+      <small class="text-muted" *ngIf="isAdmin">Mode Administrateur</small>
+      <small class="text-muted" *ngIf="!isAdmin">Bienvenue dans la boutique</small>
+    </div>
+    <button
+      *ngIf="isAdmin"
+      class="btn btn-warning fw-bold shadow align-self-stretch align-self-md-auto"
+      (click)="openModal()"
+    >
+      <i class="bi bi-plus-lg me-1"></i> Nouvelle Récolte
+    </button>
   </div>
 
-  <div class="row mb-4">
-    <div class="col-md-4">
-      <div class="card bg-dark text-white border-warning shadow">
-        <div class="card-body">
-          <h5 class="card-title text-white-50">Stock Total</h5>
-          <h2 class="text-warning">145 <small>kg</small></h2>
+  <div *ngIf="isAdmin">
+    <div class="row g-3 g-md-4 mb-4">
+      <div class="col-12 col-md-4">
+        <div class="card bg-secondary border-0 h-100" style="--bs-bg-opacity: 0.2">
+          <div class="card-body p-3">
+            <h5 class="card-title text-white-50 small text-uppercase mb-1">Stock Total</h5>
+            <h2 class="text-warning fw-bold mb-0 display-6">
+              {{ stockTotalKg | number: '1.0-1' }} <small class="fs-6 text-white">kg</small>
+            </h2>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-4">
+        <div class="card bg-secondary border-0 h-100" style="--bs-bg-opacity: 0.2">
+          <div class="card-body p-3">
+            <h5 class="card-title text-white-50 small text-uppercase mb-1">Pots en stock</h5>
+            <h2 class="text-white fw-bold mb-0 display-6">
+              {{ totalPots }} <small class="fs-6 text-muted">pots</small>
+            </h2>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-4">
+        <div class="card bg-secondary border-0 h-100" style="--bs-bg-opacity: 0.2">
+          <div class="card-body p-3">
+            <h5 class="card-title text-white-50 small text-uppercase mb-1">Valeur Estimée</h5>
+            <h2 class="text-success fw-bold mb-0 display-6">
+              {{ valeurTotale | number: '1.0-0' }} <small class="fs-6">€</small>
+            </h2>
+          </div>
         </div>
       </div>
     </div>
-    <div class="col-md-4">
-      <div class="card bg-dark text-white border-info shadow">
-        <div class="card-body">
-          <h5 class="card-title text-white-50">Pots réservés</h5>
-          <h2 class="text-info">24 <small>unités</small></h2>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <div class="card bg-dark text-white border-secondary shadow">
-    <div class="card-body p-0">
-      <table class="table table-dark table-hover mb-0">
+    <div class="table-responsive d-none d-md-block">
+      <table class="table table-dark table-hover border-secondary align-middle">
         <thead>
-          <tr>
-            <th>Type</th>
-            <th>Année</th>
-            <th>Poids</th>
-            <th>Format</th>
-            <th>Valeur Est.</th>
-            <th>Actions</th>
+          <tr class="text-warning">
+            <th>Miel</th>
+            <th class="text-center">Stock & Retrait</th>
+            <th class="text-end">Total (kg)</th>
+            <th class="text-end">Prix/kg</th>
+            <th class="text-end">Action</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let s of stocks">
-            <td>{{ s.type_miel }}</td>
-            <td>{{ s.annee }}</td>
-            <td>{{ s.poids_total }} kg</td>
-            <td>{{ s.type_miel === 'Printemps' ? 'Crémeux' : 'Liquide' }}</td>
-            <td class="text-success fw-bold">{{ (s.poids_total * s.prix_kg).toFixed(2) }} €</td>
             <td>
-              <button class="btn btn-sm btn-outline-danger" (click)="supprimerStock(s.id)">
-                Supprimer
+              <div class="fw-bold">{{ s.type_miel }}</div>
+              <div class="text-muted small">({{ s.annee }})</div>
+            </td>
+            <td class="text-center">
+              <div class="d-flex flex-column align-items-center gap-2">
+                <div
+                  *ngIf="s.pots_500g > 0"
+                  class="d-inline-flex align-items-center bg-secondary bg-opacity-25 rounded-pill p-1 pe-2"
+                >
+                  <span class="badge bg-transparent text-white">{{ s.pots_500g }} x 500g</span>
+                  <button
+                    class="btn btn-sm btn-link text-warning p-0 ms-2 fw-bold text-decoration-none"
+                    style="line-height: 1"
+                    title="Retirer"
+                    (click)="retirerPots(s, 500)"
+                  >
+                    -
+                  </button>
+                </div>
+                <div
+                  *ngIf="s.pots_250g > 0"
+                  class="d-inline-flex align-items-center bg-secondary bg-opacity-25 rounded-pill p-1 pe-2"
+                >
+                  <span class="badge bg-transparent text-white">{{ s.pots_250g }} x 250g</span>
+                  <button
+                    class="btn btn-sm btn-link text-warning p-0 ms-2 fw-bold text-decoration-none"
+                    style="line-height: 1"
+                    title="Retirer"
+                    (click)="retirerPots(s, 250)"
+                  >
+                    -
+                  </button>
+                </div>
+              </div>
+            </td>
+            <td class="text-end fw-bold text-warning fs-5">
+              {{ s.poids_total | number: '1.1-2' }} kg
+            </td>
+            <td class="text-end">{{ s.prix_kg }} €</td>
+            <td class="text-end">
+              <button class="btn btn-outline-danger" (click)="supprimerStock(s.id)">
+                <i class="bi bi-trash"></i>
               </button>
             </td>
           </tr>
-
-          @if (stocks.length === 0) {
-            <tr>
-              <td colspan="6" class="text-center py-4 text-white-50 italic">
-                Aucune récolte enregistrée pour le moment.
-              </td>
-            </tr>
-          }
         </tbody>
       </table>
     </div>
-  </div>
-</div>
 
-@if (isModalOpen) {
-  <div class="modal d-block shadow-lg" tabindex="-1" style="background-color: rgba(0, 0, 0, 0.7)">
+    <div class="d-flex flex-column gap-3 d-md-none">
+      <div class="card bg-dark border-secondary shadow-sm" *ngFor="let s of stocks">
+        <div class="card-body p-3">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+              <h5 class="text-warning fw-bold mb-0 fs-4">{{ s.type_miel }}</h5>
+              <span class="text-muted small">Récolte {{ s.annee }}</span>
+            </div>
+            <button
+              class="btn btn-sm btn-outline-danger bg-dark text-danger border-danger"
+              (click)="supprimerStock(s.id)"
+            >
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+
+          <div class="mb-3 p-2 bg-secondary bg-opacity-10 rounded">
+            <h6 class="text-white-50 small text-uppercase mb-2">Stock & Retrait Rapide</h6>
+
+            <div
+              *ngIf="s.pots_500g > 0"
+              class="d-flex justify-content-between align-items-center mb-2 p-2 bg-dark rounded border border-secondary"
+            >
+              <div class="text-white d-flex align-items-baseline gap-2">
+                <span class="fw-bold fs-5">{{ s.pots_500g }}</span>
+                <span class="text-white-50 small">pots de 500g</span>
+              </div>
+              <button
+                class="btn btn-sm btn-warning fw-bold py-1 px-3"
+                (click)="retirerPots(s, 500)"
+              >
+                - 1
+              </button>
+            </div>
+
+            <div
+              *ngIf="s.pots_250g > 0"
+              class="d-flex justify-content-between align-items-center p-2 bg-dark rounded border border-secondary"
+            >
+              <div class="text-white d-flex align-items-baseline gap-2">
+                <span class="fw-bold fs-5">{{ s.pots_250g }}</span>
+                <span class="text-white-50 small">pots de 250g</span>
+              </div>
+              <button
+                class="btn btn-sm btn-warning fw-bold py-1 px-3"
+                (click)="retirerPots(s, 250)"
+              >
+                - 1
+              </button>
+            </div>
+
+            <div
+              *ngIf="!s.pots_500g && !s.pots_250g"
+              class="text-muted small fst-italic text-center py-2 border border-secondary rounded bg-dark"
+            >
+              Rupture de stock
+            </div>
+          </div>
+
+          <div
+            class="d-flex justify-content-between align-items-end border-top border-secondary pt-3 mt-2"
+          >
+            <div>
+              <div class="text-white-50 small text-uppercase">Poids Total</div>
+              <div class="text-warning fw-bold fs-3" style="line-height: 1">
+                {{ s.poids_total | number: '1.1-2' }} <small class="fs-6">kg</small>
+              </div>
+            </div>
+            <div class="text-end">
+              <div class="text-white-50 small text-uppercase">Prix</div>
+              <div class="text-white fs-5">
+                {{ s.prix_kg }} €<small class="text-muted fs-6">/kg</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="!isAdmin" class="row g-4 justify-content-center">
+    <div class="col-sm-6 col-md-4 col-lg-3" *ngFor="let s of stocks">
+      <div class="card bg-secondary border-0 h-100 shadow-lg" style="--bs-bg-opacity: 0.2">
+        <div class="card-header bg-transparent border-0 text-center pt-4">
+          <div
+            class="rounded-circle bg-warning d-inline-flex align-items-center justify-content-center"
+            style="width: 60px; height: 60px"
+          >
+            <span class="fs-1">🐝</span>
+          </div>
+        </div>
+        <div class="card-body text-center text-white">
+          <h4 class="card-title fw-bold text-warning mb-1">{{ s.type_miel }}</h4>
+          <p class="text-white-50 small mb-3">Récolte {{ s.annee }}</p>
+          <div class="d-flex justify-content-center gap-2 mb-3 flex-wrap">
+            <span class="badge bg-dark border border-secondary" *ngIf="s.pots_500g > 0"
+              >500g Dispo</span
+            >
+            <span class="badge bg-dark border border-secondary" *ngIf="s.pots_250g > 0"
+              >250g Dispo</span
+            >
+          </div>
+          <h3 class="text-white fw-bold mb-0">
+            {{ s.prix_kg * 0.5 | number: '1.2-2' }} € <small class="fs-6 text-muted">/ 500g</small>
+          </h3>
+        </div>
+        <div class="card-footer bg-transparent border-0 pb-4 px-4">
+          <button class="btn btn-warning w-100 fw-bold py-2" (click)="commander(s)">
+            🛒 Commander
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="stocks.length === 0" class="col-12 text-center text-muted py-5">
+      <h3>😞 Oups, tout le miel a été mangé !</h3>
+      <p>Revenez plus tard pour la prochaine récolte.</p>
+    </div>
+  </div>
+
+  <div
+    class="modal d-block"
+    style="background: rgba(0, 0, 0, 0.8); z-index: 1050"
+    *ngIf="isModalOpen && isAdmin"
+  >
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content bg-dark text-white border-warning">
+      <div class="modal-content bg-dark border-warning shadow-lg">
         <div class="modal-header border-secondary">
-          <h5 class="modal-title text-warning">🍯 Enregistrer une récolte</h5>
+          <h5 class="modal-title text-warning fw-bold">
+            <i class="bi bi-jar me-2"></i>Ajouter une récolte
+          </h5>
           <button type="button" class="btn-close btn-close-white" (click)="closeModal()"></button>
         </div>
-
-        <form (ngSubmit)="ajouterRecolte()">
-          <div class="modal-body">
+        <div class="modal-body p-4">
+          <form (ngSubmit)="ajouterRecolte()">
             <div class="row g-3">
-              <div class="col-8">
-                <label class="form-label text-warning small">Type de miel</label>
+              <div class="col-12">
+                <label class="form-label text-white-50 small mb-1">Variété de Miel</label>
                 <select
                   class="form-select bg-dark text-white border-secondary"
                   [(ngModel)]="nouveauStock.type_miel"
@@ -84,77 +258,81 @@
                 >
                   <option>Printemps</option>
                   <option>Été</option>
-                  <option>Forêt</option>
                   <option>Acacia</option>
                   <option>Châtaignier</option>
+                  <option>Forêt</option>
+                  <option>Toutes fleurs</option>
                 </select>
               </div>
-              <div class="col-4">
-                <label class="form-label text-warning small">Année</label>
-                <input
-                  type="number"
-                  class="form-control bg-dark text-white border-secondary"
-                  [(ngModel)]="nouveauStock.annee"
-                  name="annee"
-                />
-              </div>
-
               <div class="col-6">
-                <label class="form-label text-white small">Pots de 500g</label>
-                <input
-                  type="number"
-                  class="form-control bg-dark text-white border-secondary"
-                  [(ngModel)]="nouveauStock.pots_500g"
-                  (ngModelChange)="calculerPoidsAuto()"
-                  name="pots500"
-                  placeholder="0"
-                />
+                <label class="form-label text-white-50 small mb-1">Stock Pots 500g</label>
+                <div class="input-group">
+                  <input
+                    type="number"
+                    class="form-control bg-dark text-white border-secondary"
+                    [(ngModel)]="nouveauStock.pots_500g"
+                    (ngModelChange)="calculerPoidsAuto()"
+                    name="p500"
+                    placeholder="0"
+                  />
+                  <span class="input-group-text bg-secondary border-secondary text-white-50"
+                    >pots</span
+                  >
+                </div>
               </div>
-
               <div class="col-6">
-                <label class="form-label text-white small">Pots de 250g</label>
-                <input
-                  type="number"
-                  class="form-control bg-dark text-white border-secondary"
-                  [(ngModel)]="nouveauStock.pots_250g"
-                  (ngModelChange)="calculerPoidsAuto()"
-                  name="pots250"
-                  placeholder="0"
-                />
+                <label class="form-label text-white-50 small mb-1">Stock Pots 250g</label>
+                <div class="input-group">
+                  <input
+                    type="number"
+                    class="form-control bg-dark text-white border-secondary"
+                    [(ngModel)]="nouveauStock.pots_250g"
+                    (ngModelChange)="calculerPoidsAuto()"
+                    name="p250"
+                    placeholder="0"
+                  />
+                  <span class="input-group-text bg-secondary border-secondary text-white-50"
+                    >pots</span
+                  >
+                </div>
               </div>
-
-              <div class="col-6">
-                <label class="form-label text-white-50 small">Poids Total (kg)</label>
+              <div class="col-12">
+                <label class="form-label text-warning small mb-1 fw-bold"
+                  >Poids Total Calculé (kg)</label
+                >
                 <input
                   type="number"
-                  class="form-control bg-secondary text-white border-0"
+                  class="form-control bg-secondary text-white fw-bold border-0 fs-5"
                   [ngModel]="nouveauStock.poids_total"
-                  name="poids"
                   readonly
+                  name="ptotal"
                 />
               </div>
-
-              <div class="col-6">
-                <label class="form-label text-warning small">Prix au kg (€)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  class="form-control bg-dark text-white border-secondary"
-                  [(ngModel)]="nouveauStock.prix_kg"
-                  name="prix"
-                />
+              <div class="col-12">
+                <label class="form-label text-white-50 small mb-1">Prix du marché au kg (€)</label>
+                <div class="input-group">
+                  <input
+                    type="number"
+                    class="form-control bg-dark text-white border-secondary"
+                    [(ngModel)]="nouveauStock.prix_kg"
+                    name="prix"
+                    placeholder="ex: 14.00"
+                  />
+                  <span class="input-group-text bg-secondary border-secondary text-white-50"
+                    >€/kg</span
+                  >
+                </div>
               </div>
             </div>
-          </div>
-
-          <div class="modal-footer border-secondary">
-            <button type="button" class="btn btn-outline-secondary" (click)="closeModal()">
-              Annuler
-            </button>
-            <button type="submit" class="btn btn-warning fw-bold">Enregistrer</button>
-          </div>
-        </form>
+            <div class="mt-4 pt-3 border-top border-secondary text-end">
+              <button type="button" class="btn btn-outline-light me-2" (click)="closeModal()">
+                Annuler
+              </button>
+              <button class="btn btn-warning fw-bold px-4">Enregistrer la récolte</button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   </div>
-}
+</div>

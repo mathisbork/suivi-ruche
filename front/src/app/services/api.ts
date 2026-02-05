@@ -31,4 +31,8 @@ export class ApiService {
   deleteStock(id: number) {
     return this.http.delete(`${this.apiUrl}/stocks/${id}`);
   }
+
+  updateStock(id: number, data: any) {
+    return this.http.put(`${this.apiUrl}/stocks/${id}`, data);
+  }
 }

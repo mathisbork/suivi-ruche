@@ -1,5 +1,8 @@
 @if (showNavbar) {
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom border-warning shadow-sm">
+  <nav
+    class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom border-warning shadow-sm"
+    *ngIf="isLoggedIn"
+  >
     <div class="container-fluid">
       <a class="navbar-brand fw-bold text-warning" routerLink="/home">
         <span class="me-2">🐝</span>Suivi Ruche
@@ -11,27 +14,48 @@
 
       <div class="collapse navbar-collapse" [class.show]="!isMenuCollapsed">
         <ul class="navbar-nav ms-auto align-items-center">
-          <li class="nav-item">
-            <a class="nav-link text-white px-3" routerLink="/home" (click)="isMenuCollapsed = true"
-              >Tableau de bord</a
-            >
-          </li>
-          <li class="nav-item">
-            <a
-              class="nav-link text-white px-3"
-              routerLink="/stocks"
-              (click)="isMenuCollapsed = true"
-              >Miellerie</a
-            >
-          </li>
-          <li class="nav-item">
-            <a
-              class="nav-link text-white px-3"
-              routerLink="/interventions"
-              (click)="isMenuCollapsed = true"
-              >Registre</a
-            >
-          </li>
+          <ng-container *ngIf="isAdmin">
+            <li class="nav-item">
+              <a
+                class="nav-link text-white px-3"
+                routerLink="/home"
+                (click)="isMenuCollapsed = true"
+              >
+                Tableau de bord
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link text-white px-3"
+                routerLink="/stocks"
+                (click)="isMenuCollapsed = true"
+              >
+                Miellerie
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link text-white px-3"
+                routerLink="/commandes"
+                (click)="isMenuCollapsed = true"
+              >
+                Commandes
+              </a>
+            </li>
+          </ng-container>
+
+          <ng-container *ngIf="!isAdmin">
+            <li class="nav-item">
+              <a
+                class="nav-link fw-bold text-warning px-3 fs-5"
+                routerLink="/stocks"
+                (click)="isMenuCollapsed = true"
+              >
+                🛒 Commander
+              </a>
+            </li>
+          </ng-container>
+
           <li class="nav-item ms-lg-3 mt-2 mt-lg-0">
             <button (click)="logout()" class="btn btn-sm btn-outline-danger rounded-pill px-4">
               Quitter
@@ -46,3 +70,4 @@
 <div [class.page-center-container]="!showNavbar" [class.main-content]="showNavbar">
   <router-outlet></router-outlet>
 </div>
+<!-- glhtsg -->
