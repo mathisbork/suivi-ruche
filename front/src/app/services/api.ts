@@ -35,4 +35,16 @@ export class ApiService {
   updateStock(id: number, data: any) {
     return this.http.put(`${this.apiUrl}/stocks/${id}`, data);
   }
+
+  sendOrder(orderData: any) {
+    return this.http.post(`${this.apiUrl}/send-email`, orderData);
+  }
+
+  saveOrder(orderData: any) {
+    return this.http.post(`${this.apiUrl}/orders`, orderData);
+  }
+
+  getUserOrders(userId: number) {
+    return this.http.get(`${this.apiUrl}/orders/${userId}`);
+  }
 }

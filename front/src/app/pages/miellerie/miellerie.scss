@@ -1,0 +1,41 @@
+.toast-notification {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1060; /* Au-dessus de la modal (1050) */
+  min-width: 300px;
+  max-width: 90%;
+  border-radius: 50px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  animation: slideDown 0.4s ease-out;
+
+  .toast-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+  }
+}
+
+@keyframes slideDown {
+  from { top: -100px; opacity: 0; }
+  to { top: 20px; opacity: 1; }
+}
+
+.shop-header-container {
+  padding: 1rem 0;
+  width: 100%;
+}
+
+.cart-summary {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 8px 15px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 193, 7, 0.2);
+}
+
+.cart-summary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+}
