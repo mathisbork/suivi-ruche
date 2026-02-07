@@ -23,7 +23,7 @@
                 <tr>
                   <th class="ps-4">Produit</th>
                   <th class="text-center">Quantité</th>
-                  <th class="text-end">Prix Unit. (500g)</th>
+                  <th class="text-end">Prix Unit.</th>
                   <th class="text-end pe-4">Total</th>
                   <th></th>
                 </tr>
@@ -31,18 +31,27 @@
               <tbody>
                 <tr *ngFor="let item of cartItems">
                   <td class="ps-4">
-                    <div class="fw-bold">{{ item.type_miel }}</div>
-                    <small style="color: #30353a">Récolte {{ item.annee }}</small>
+                    <div class="fw-bold">
+                      {{ item.type_miel }}
+                      <span class="badge bg-secondary text-light ms-1 small">{{
+                        item.type_pot
+                      }}</span>
+                    </div>
+                    <small style="color: #9ca3af">Récolte {{ item.annee }}</small>
                   </td>
+
                   <td class="text-center">
-                    <span class="badge bg-dark border border-secondary fs-6">{{
-                      item.quantity
-                    }}</span>
+                    <span class="badge bg-dark border border-secondary fs-6">
+                      {{ item.quantity }}
+                    </span>
                   </td>
-                  <td class="text-end">{{ item.prix_kg / 2 | number: '1.2-2' }} €</td>
+
+                  <td class="text-end">{{ item.prix_unitaire | number: '1.2-2' }} €</td>
+
                   <td class="text-end pe-4 fw-bold text-warning">
-                    {{ (item.prix_kg / 2) * item.quantity | number: '1.2-2' }} €
+                    {{ item.prix_unitaire * item.quantity | number: '1.2-2' }} €
                   </td>
+
                   <td class="text-end pe-3">
                     <button
                       class="btn btn-sm btn-outline-danger border-0"

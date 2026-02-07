@@ -47,4 +47,12 @@ export class ApiService {
   getUserOrders(userId: number) {
     return this.http.get(`${this.apiUrl}/orders/${userId}`);
   }
+
+  getAllOrders() {
+    return this.http.get(`${this.apiUrl}/admin/orders`);
+  }
+
+  updateOrderStatus(id: number, nouveauStatut: string) {
+    return this.http.put(`${this.apiUrl}/orders/${id}/status`, { statut: nouveauStatut });
+  }
 }

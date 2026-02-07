@@ -163,6 +163,7 @@
                       -
                     </button>
                   </div>
+
                   <div
                     *ngIf="s.pots_250g > 0"
                     class="d-inline-flex align-items-center bg-secondary bg-opacity-25 rounded-pill p-1 pe-2"
@@ -177,11 +178,17 @@
                       -
                     </button>
                   </div>
+
+                  <div *ngIf="s.pots_500g === 0 && s.pots_250g === 0">
+                    <span class="badge bg-danger">RUPTURE</span>
+                  </div>
                 </div>
               </td>
+
               <td class="text-end fw-bold text-warning fs-5">
-                {{ s.poids_total | number: '1.1-2' }} kg
+                {{ s.pots_500g * 0.5 + s.pots_250g * 0.25 | number: '1.1-2' }} kg
               </td>
+
               <td class="text-end">{{ s.prix_kg }} €</td>
               <td class="text-end">
                 <button class="btn btn-outline-danger" (click)="supprimerStock(s.id)">
@@ -285,10 +292,10 @@
 
             <div class="d-flex justify-content-center gap-2 mb-3 flex-wrap">
               <span class="badge bg-dark border border-secondary" *ngIf="s.pots_500g > 0">
-                500g Dispo
+                {{ s.pots_500g }} pot(s) de 500g
               </span>
               <span class="badge bg-dark border border-secondary" *ngIf="s.pots_250g > 0">
-                250g Dispo
+                {{ s.pots_250g }} pot(s) de 250g
               </span>
             </div>
 

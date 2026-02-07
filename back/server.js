@@ -167,3 +167,28 @@ app.post("/api/orders", (req, res) => {
 app.listen(3000, () => {
   console.log("Serveur prêt sur http://localhost:3000");
 });
+
+app.get("/api/admin/orders", (req, res) => {
+  const sql = `
+    SELECT c.*, u.username, u.email 
+    FROM commande c 
+    JOIN users u ON c.id_user = u.id 
+    ORDER BY c.date_creation DESC
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).json(err);
+    res.json(results);
+  });
+});
+
+app.put("/api/orders/:id/status", (req, res) => {
+  const id = req.params.id;
+  const { statut } = req.body; // "Validée", "Payée", "Annulée"
+
+  const sql = "UPDATE commande SET statut = ? WHERE id_commande = ?";
+  db.query(sql, [statut, id], (err, result) => {
+    if (err) return res.status(500).json(err);
+    res.json({ message: "Statut mis à jour" });
+  });
+});

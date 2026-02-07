@@ -14,31 +14,28 @@ import { CartService } from '../../services/cart';
 })
 export class Miellerie implements OnInit, OnDestroy {
   stocks: any[] = [];
-  mesCommandes: any[] = []; // Liste des commandes du client connecté
+  mesCommandes: any[] = [];
 
-  // --- MODALS ---
-  isModalOpen = false; // Pour l'ajout de stock
-  isDeleteModalOpen = false; // Pour la suppression
+  // AJOUT : On garde une copie locale du panier pour vérifier les quantités
+  currentCartItems: any[] = [];
+
+  isModalOpen = false;
+  isDeleteModalOpen = false;
   idToDelete: number | null = null;
 
-  // --- HEADER PANIER ---
   cartCount = 0;
   cartAmount = 0;
 
-  // --- VARIABLES ---
   refreshInterval: any;
   isAdmin = false;
 
-  // Totaux pour l'admin
   stockTotalKg = 0;
   totalPots = 0;
   valeurTotale = 0;
 
-  // Notifications
   notificationMessage = '';
   isError = false;
 
-  // Formulaire d'ajout
   nouveauStock = {
     type_miel: 'Printemps',
     annee: 2026,
@@ -58,13 +55,10 @@ export class Miellerie implements OnInit, OnDestroy {
     this.checkRole();
     this.chargerStocks();
 
-    // Si c'est un client, on charge ses commandes tout de suite
     if (!this.isAdmin) {
       this.chargerMesCommandes();
     }
 
-    // --- AUTO-REFRESH (STOCKS + COMMANDES) ---
-    // On rafraîchit les données toutes les 2 secondes
     this.refreshInterval = setInterval(() => {
       this.chargerStocks();
       if (!this.isAdmin) {
@@ -72,9 +66,9 @@ export class Miellerie implements OnInit, OnDestroy {
       }
     }, 2000);
 
-    // --- ABONNEMENT AU PANIER ---
-    // Met à jour le header (compteur et prix) dès que le panier change
+    // MODIFICATION : On stocke les items du panier dans currentCartItems
     this.cartService.cart$.subscribe((items) => {
+      this.currentCartItems = items; // <--- C'est ça qui nous permet de vérifier
       this.cartCount = items.reduce((acc, item) => acc + item.quantity, 0);
       this.cartAmount = this.cartService.getTotal();
     });
@@ -84,8 +78,6 @@ export class Miellerie implements OnInit, OnDestroy {
     if (this.refreshInterval) clearInterval(this.refreshInterval);
   }
 
-  // --- GESTION DES COMMANDES CLIENT (HISTORIQUE) ---
-
   chargerMesCommandes() {
     const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
     if (user.id) {
@@ -93,29 +85,42 @@ export class Miellerie implements OnInit, OnDestroy {
         next: (data: any) => {
           this.mesCommandes = data;
         },
-        error: (e) => console.error(e), // Erreur silencieuse pour ne pas spammer
+        error: (e) => console.error(e),
       });
     }
   }
 
-  // Définit la couleur du badge selon le statut
   getStatusColor(statut: string): string {
     const s = (statut || '').toLowerCase();
-    if (s === 'payée' || s === 'payee') return 'success'; // Vert
-    if (s === 'validée' || s === 'validee') return 'primary'; // Bleu
-    if (s === 'annulée' || s === 'annulee') return 'danger'; // Rouge
-    return 'warning'; // Jaune (En attente) par défaut
+    if (s === 'payée' || s === 'payee') return 'success';
+    if (s === 'validée' || s === 'validee') return 'primary';
+    if (s === 'annulée' || s === 'annulee') return 'danger';
+    return 'warning';
   }
 
-  // --- GESTION DU PANIER (AJOUT) ---
-
-  // C'EST ICI QUE ÇA A CHANGÉ : On prend en compte le type de pot (500g ou 250g)
+  // --- C'EST ICI QUE LA MAGIE OPÈRE (Vérification du stock) ---
   commander(stock: any, typePot: string) {
+    // 1. Quel est le stock max pour ce pot ?
+    const maxStock = typePot === '500g' ? stock.pots_500g : stock.pots_250g;
+
+    // 2. Combien en a-t-on DÉJÀ dans le panier ?
+    const itemInCart = this.currentCartItems.find(
+      (i) => i.id === stock.id && i.type_pot === typePot,
+    );
+    const qtyInCart = itemInCart ? itemInCart.quantity : 0;
+
+    // 3. Vérification
+    if (qtyInCart + 1 > maxStock) {
+      this.afficherNotif(`❌ Stock insuffisant ! Vous avez déjà tout pris.`, true);
+      return; // On arrête tout, on n'ajoute pas au panier
+    }
+
+    // 4. Si c'est bon, on ajoute
     this.cartService.addToCart(stock, typePot);
     this.afficherNotif(`🛒 ${stock.type_miel} (${typePot}) ajouté au panier !`);
   }
 
-  // --- FONCTIONS UTILITAIRES ---
+  // ... (Le reste du fichier ne change pas : afficherNotif, checkRole, chargerStocks, modals, admin functions) ...
 
   afficherNotif(message: string, erreur: boolean = false) {
     this.notificationMessage = message;
@@ -130,24 +135,35 @@ export class Miellerie implements OnInit, OnDestroy {
     this.isAdmin = user.role === 'admin';
   }
 
-  // --- GESTION DES STOCKS (ADMIN) ---
-
   chargerStocks() {
     const sellerId = 1;
     this.api.getStocks(sellerId).subscribe({
       next: (data: any) => {
         this.stocks = data;
-        // Calculs des totaux pour l'affichage admin
-        this.stockTotalKg = this.stocks.reduce((acc, s) => acc + Number(s.poids_total), 0);
+
+        // --- CORRECTION : ON RECALCULE TOUT EN LIVE ---
+
+        // 1. Calcul du poids total basé sur les pots restants (et pas sur la colonne poids_total de la BDD qui est obsolète)
+        this.stockTotalKg = this.stocks.reduce((acc, s) => {
+          const poidsReel = s.pots_500g * 0.5 + s.pots_250g * 0.25;
+          return acc + poidsReel;
+        }, 0);
+
+        // 2. Calcul du nombre total de pots
         this.totalPots = this.stocks.reduce((acc, s) => acc + s.pots_500g + s.pots_250g, 0);
-        this.valeurTotale = this.stocks.reduce((acc, s) => acc + s.poids_total * s.prix_kg, 0);
+
+        // 3. Calcul de la valeur totale (Poids réel * Prix au kg)
+        this.valeurTotale = this.stocks.reduce((acc, s) => {
+          const poidsReel = s.pots_500g * 0.5 + s.pots_250g * 0.25;
+          return acc + poidsReel * s.prix_kg;
+        }, 0);
+
         this.cd.detectChanges();
       },
       error: (e) => console.error(e),
     });
   }
 
-  // Gestion de la modal d'ajout
   openModal() {
     this.isModalOpen = true;
   }
@@ -170,7 +186,6 @@ export class Miellerie implements OnInit, OnDestroy {
       next: () => {
         this.chargerStocks();
         this.closeModal();
-        // Reset du formulaire
         this.nouveauStock = {
           type_miel: 'Printemps',
           annee: 2026,
@@ -185,7 +200,6 @@ export class Miellerie implements OnInit, OnDestroy {
     });
   }
 
-  // Gestion de la suppression (avec Modal Confirm)
   supprimerStock(id: number) {
     if (!this.isAdmin) return;
     this.idToDelete = id;
@@ -210,10 +224,8 @@ export class Miellerie implements OnInit, OnDestroy {
     this.idToDelete = null;
   }
 
-  // Fonction admin pour retirer manuellement des pots (hors commande)
   retirerPots(stock: any, grammage: number) {
     const qteRetiree = 1;
-
     let p500 = stock.pots_500g;
     let p250 = stock.pots_250g;
 
@@ -234,11 +246,7 @@ export class Miellerie implements OnInit, OnDestroy {
     const nouveauPoids = p500 * 0.5 + p250 * 0.25;
 
     this.api
-      .updateStock(stock.id, {
-        pots_500g: p500,
-        pots_250g: p250,
-        poids_total: nouveauPoids,
-      })
+      .updateStock(stock.id, { pots_500g: p500, pots_250g: p250, poids_total: nouveauPoids })
       .subscribe({
         next: () => {
           this.chargerStocks();
