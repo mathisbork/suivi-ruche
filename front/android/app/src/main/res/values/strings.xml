@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Miellerie</string>
+    <string name="title_activity_main">Miellerie</string>
+    <string name="package_name">com.mathis.miellerie</string>
+    <string name="custom_url_scheme">com.mathis.miellerie</string>
+</resources>
